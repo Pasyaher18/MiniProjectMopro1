@@ -1,45 +1,15 @@
 package com.pasya0118.miniproject.screens
 
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,25 +23,32 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTaskScreen(
+fun EditTaskScreen(
+    taskId: String,
     viewModel: TaskViewModel,
     onNavigateBack: () -> Unit
 ) {
-    var taskName by remember { mutableStateOf("") }
-    var taskDescription by remember { mutableStateOf("") }
-    var selectedPriority by remember { mutableStateOf(Priority.MEDIUM) }
-    var selectedCategory by remember { mutableStateOf(Category.PERSONAL) }
+    val task = viewModel.getTaskById(taskId).observeAsState().value
 
-    var isImportantTask by remember { mutableStateOf(false) }
+    if (task == null) {
+        Text("Loading or Task not found...")
+        return
+    }
+
+    var taskName by remember { mutableStateOf(task.name) }
+    var taskDescription by remember { mutableStateOf(task.description) }
+    var selectedPriority by remember { mutableStateOf(task.priority ?: Priority.MEDIUM) }
+    var selectedCategory by remember { mutableStateOf(task.category ?: Category.PERSONAL) }
+    var isImportantTask by remember { mutableStateOf(task.isCompleted.not()) }
+
     var isTaskNameError by remember { mutableStateOf(false) }
-
     var isCategoryExpanded by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
     val errorEmptyTaskMessage = stringResource(id = R.string.error_empty_task)
-    val taskAddedMessage = stringResource(id = R.string.task_added)
+    val taskUpdatedMessage = stringResource(id = R.string.task_updated)
 
     Scaffold(
         snackbarHost = {
@@ -92,7 +69,7 @@ fun AddTaskScreen(
         },
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(id = R.string.add_task)) },
+                title = { Text(stringResource(id = R.string.edit_task)) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -117,6 +94,7 @@ fun AddTaskScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Task Name
             OutlinedTextField(
                 value = taskName,
                 onValueChange = {
@@ -136,6 +114,7 @@ fun AddTaskScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            // Task Description
             OutlinedTextField(
                 value = taskDescription,
                 onValueChange = { taskDescription = it },
@@ -146,6 +125,7 @@ fun AddTaskScreen(
                 maxLines = 5
             )
 
+            // Task Pending Checkbox
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -154,9 +134,10 @@ fun AddTaskScreen(
                     checked = isImportantTask,
                     onCheckedChange = { isImportantTask = it }
                 )
-                Text(text = "Task Penting")
+                Text(text = "Task Pending")
             }
 
+            // Priority Radio Buttons
             Text(
                 text = stringResource(id = R.string.priority),
                 style = MaterialTheme.typography.titleMedium,
@@ -176,7 +157,7 @@ fun AddTaskScreen(
                     )
                     .padding(16.dp)
             ) {
-                Priority.entries.forEach { priority ->
+                Priority.values().forEach { priority ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
@@ -188,14 +169,8 @@ fun AddTaskScreen(
                             onClick = { selectedPriority = priority }
                         )
 
-                        val priorityText = when (priority) {
-                            Priority.HIGH -> stringResource(id = R.string.priority_high)
-                            Priority.MEDIUM -> stringResource(id = R.string.priority_medium)
-                            Priority.LOW -> stringResource(id = R.string.priority_low)
-                        }
-
                         Text(
-                            text = priorityText,
+                            text = priority.name,
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.padding(start = 8.dp)
                         )
@@ -203,6 +178,7 @@ fun AddTaskScreen(
                 }
             }
 
+            // Category Dropdown
             Text(
                 text = stringResource(id = R.string.category),
                 style = MaterialTheme.typography.titleMedium,
@@ -217,35 +193,22 @@ fun AddTaskScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 TextField(
-                    value = when (selectedCategory) {
-                        Category.WORK -> stringResource(id = R.string.category_work)
-                        Category.PERSONAL -> stringResource(id = R.string.category_personal)
-                        Category.SHOPPING -> stringResource(id = R.string.category_shopping)
-                        Category.OTHER -> stringResource(id = R.string.category_other)
-                    },
+                    value = selectedCategory.name,
                     onValueChange = {},
                     readOnly = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isCategoryExpanded) },
                     colors = ExposedDropdownMenuDefaults.textFieldColors(),
                     modifier = Modifier
                         .fillMaxWidth()
-
                 )
 
                 ExposedDropdownMenu(
                     expanded = isCategoryExpanded,
                     onDismissRequest = { isCategoryExpanded = false }
                 ) {
-                    Category.entries.forEach { category ->
-                        val categoryText = when (category) {
-                            Category.WORK -> stringResource(id = R.string.category_work)
-                            Category.PERSONAL -> stringResource(id = R.string.category_personal)
-                            Category.SHOPPING -> stringResource(id = R.string.category_shopping)
-                            Category.OTHER -> stringResource(id = R.string.category_other)
-                        }
-
+                    Category.values().forEach { category ->
                         DropdownMenuItem(
-                            text = { Text(text = categoryText) },
+                            text = { Text(text = category.name) },
                             onClick = {
                                 selectedCategory = category
                                 isCategoryExpanded = false
@@ -257,8 +220,7 @@ fun AddTaskScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            val saveButtonText = stringResource(id = R.string.save)
-
+            // Save Button
             Button(
                 onClick = {
                     if (taskName.isBlank()) {
@@ -270,18 +232,17 @@ fun AddTaskScreen(
                             )
                         }
                     } else {
-                        val finalPriority = if (isImportantTask) Priority.HIGH else selectedPriority
-
-                        viewModel.addTask(
-                            name = taskName,
-                            description = taskDescription,
-                            priority = finalPriority,
-                            category = selectedCategory
+                        viewModel.updateTask(
+                            taskId,
+                            taskName,
+                            taskDescription,
+                            selectedPriority.name,
+                            selectedCategory.name
                         )
 
                         scope.launch {
                             snackbarHostState.showSnackbar(
-                                message = taskAddedMessage,
+                                message = taskUpdatedMessage,
                                 duration = SnackbarDuration.Short
                             )
                         }
@@ -292,7 +253,7 @@ fun AddTaskScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = saveButtonText,
+                    text = stringResource(id = R.string.save_changes),
                     modifier = Modifier.padding(vertical = 4.dp)
                 )
             }

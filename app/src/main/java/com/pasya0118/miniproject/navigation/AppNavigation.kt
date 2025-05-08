@@ -15,6 +15,7 @@ import com.pasya0118.miniproject.model.Task
 import com.pasya0118.miniproject.screens.AddTaskScreen
 import com.pasya0118.miniproject.screens.TaskDetailScreen
 import com.pasya0118.miniproject.screens.TaskListScreen
+import com.pasya0118.miniproject.screens.EditTaskScreen // Import EditTaskScreen
 import com.pasya0118.miniproject.viewmodel.TaskViewModel
 
 @RequiresApi(Build.VERSION_CODES.N)
@@ -23,13 +24,13 @@ fun AppNavigation() {
     val navController = rememberNavController()
     val taskViewModel: TaskViewModel = viewModel()
 
-
     var selectedTask by remember { mutableStateOf<Task?>(null) }
 
     NavHost(
         navController = navController,
         startDestination = Screen.TaskList.route
     ) {
+        // Task List Screen
         composable(Screen.TaskList.route) {
             TaskListScreen(
                 viewModel = taskViewModel,
@@ -38,11 +39,13 @@ fun AppNavigation() {
                 },
                 onTaskClick = { task ->
                     selectedTask = task
-                    navController.navigate(Screen.TaskDetail.route)
+                    // Navigate to TaskDetail or EditTask with taskId
+                    navController.navigate("edit_task/${task.id}") // Navigate to EditTaskScreen
                 }
             )
         }
 
+        // Add Task Screen
         composable(Screen.AddTask.route) {
             AddTaskScreen(
                 viewModel = taskViewModel,
@@ -52,6 +55,7 @@ fun AppNavigation() {
             )
         }
 
+        // Task Detail Screen
         composable(Screen.TaskDetail.route) {
             selectedTask?.let { task ->
                 TaskDetailScreen(
@@ -63,11 +67,26 @@ fun AppNavigation() {
                 )
             }
         }
+
+        // Edit Task Screen
+        composable("edit_task/{taskId}") { backStackEntry ->
+            val taskId = backStackEntry.arguments?.getString("taskId")
+            taskId?.let {
+                EditTaskScreen(
+                    taskId = it,
+                    viewModel = taskViewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+        }
     }
 }
 
+// Sealed class for different screens
 sealed class Screen(val route: String) {
     object TaskList : Screen("task_list")
     object AddTask : Screen("add_task")
     object TaskDetail : Screen("task_detail")
+    // Add route for EditTaskScreen
+    object EditTask : Screen("edit_task/{taskId}")
 }

@@ -32,4 +32,8 @@
     <string name="task_important_description">This task is marked as important and should be prioritized.</string>
     <string name="task_important_added">Important task added successfully</string>
     <string name="task_important_deleted">Important task deleted successfully</string>
+
+    <string name="task_updated">Task Update</string>
+    <string name="edit_task">Edit Task</string>
+    <string name="save_changes">Save Change</string>
 </resources>

@@ -15,9 +15,10 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
 
     private val taskDao: TaskDao = TaskDatabase.getDatabase(application).taskDao()
 
+    // Daftar task yang akan di-observe di UI
     val tasks: LiveData<List<Task>> = taskDao.getAllTasks()
 
-
+    // Menambahkan task baru ke database
     fun addTask(name: String, description: String, priority: Priority, category: Category) {
         val newTask = Task(
             name = name,
@@ -30,17 +31,40 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // Menghapus task berdasarkan ID
     fun deleteTask(taskId: String) {
         viewModelScope.launch {
             taskDao.deleteTaskById(taskId)
         }
     }
 
+    // Toggle status completed task
     fun toggleTaskCompletion(taskId: String) {
         viewModelScope.launch {
             val task = taskDao.getTaskById(taskId)
             task?.let {
                 val updatedTask = it.copy(isCompleted = !it.isCompleted)
+                taskDao.updateTask(updatedTask)
+            }
+        }
+    }
+
+    // Menambahkan fungsi untuk mendapatkan task berdasarkan ID
+    fun getTaskById(taskId: String): LiveData<Task> {
+        return taskDao.getTaskByIdLive(taskId)
+    }
+
+    // Fungsi untuk memperbarui task
+    fun updateTask(taskId: String, name: String, description: String, priority: String, category: String) {
+        viewModelScope.launch {
+            val task = taskDao.getTaskById(taskId)
+            task?.let {
+                val updatedTask = it.copy(
+                    name = name,
+                    description = description,
+                    priority = Priority.valueOf(priority), // Convert string to Priority enum
+                    category = Category.valueOf(category)  // Convert string to Category enum
+                )
                 taskDao.updateTask(updatedTask)
             }
         }
