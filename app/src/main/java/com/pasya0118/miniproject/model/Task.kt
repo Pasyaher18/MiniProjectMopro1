@@ -2,7 +2,6 @@ package com.pasya0118.miniproject.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import androidx.room.TypeConverters
 import java.util.UUID
 
 @Entity(tableName = "task_table")
