@@ -119,7 +119,6 @@ fun AddTaskScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Nama Tugas
             OutlinedTextField(
                 value = taskName,
                 onValueChange = {
