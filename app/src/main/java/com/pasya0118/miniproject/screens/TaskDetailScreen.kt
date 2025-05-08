@@ -1,3 +1,4 @@
+
 package com.pasya0118.miniproject.screens
 
 import android.content.Intent
@@ -59,7 +60,7 @@ fun TaskDetailScreen(
     val taskDescriptionString = stringResource(id = R.string.task_description)
     val priorityString = stringResource(id = R.string.priority)
     val categoryString = stringResource(id = R.string.category)
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -95,7 +96,7 @@ fun TaskDetailScreen(
                             contentDescription = shareString
                         )
                     }
-                    
+
                     IconButton(
                         onClick = {
                             viewModel.deleteTask(task.id)
@@ -125,13 +126,13 @@ fun TaskDetailScreen(
             } else {
                 Color(0xFFFFA000)
             }
-            
+
             val statusText = if (task.isCompleted) {
                 "Selesai"
             } else {
                 "Belum Selesai"
             }
-            
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -169,7 +170,7 @@ fun TaskDetailScreen(
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold
                     )
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -183,7 +184,7 @@ fun TaskDetailScreen(
                         text = task.description.ifEmpty { "-" },
                         style = MaterialTheme.typography.bodyLarge
                     )
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -198,7 +199,7 @@ fun TaskDetailScreen(
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
-                            
+
                             val priorityText = when (task.priority) {
                                 com.pasya0118.miniproject.model.Priority.HIGH ->
                                     stringResource(id = R.string.priority_high)
@@ -207,20 +208,20 @@ fun TaskDetailScreen(
                                 com.pasya0118.miniproject.model.Priority.LOW ->
                                     stringResource(id = R.string.priority_low)
                             }
-                            
+
                             Text(
                                 text = priorityText,
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }
-                        
+
                         Column {
                             Text(
                                 text = categoryString,
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
-                            
+
                             val categoryText = when (task.category) {
                                 com.pasya0118.miniproject.model.Category.WORK ->
                                     stringResource(id = R.string.category_work)
@@ -231,7 +232,7 @@ fun TaskDetailScreen(
                                 com.pasya0118.miniproject.model.Category.OTHER ->
                                     stringResource(id = R.string.category_other)
                             }
-                            
+
                             Text(
                                 text = categoryText,
                                 style = MaterialTheme.typography.bodyLarge
@@ -242,4 +243,4 @@ fun TaskDetailScreen(
             }
         }
     }
-} 
+}

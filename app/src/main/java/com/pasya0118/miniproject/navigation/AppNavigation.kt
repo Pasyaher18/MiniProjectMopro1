@@ -1,5 +1,7 @@
 package com.pasya0118.miniproject.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -15,14 +17,15 @@ import com.pasya0118.miniproject.screens.TaskDetailScreen
 import com.pasya0118.miniproject.screens.TaskListScreen
 import com.pasya0118.miniproject.viewmodel.TaskViewModel
 
+@RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
     val taskViewModel: TaskViewModel = viewModel()
-    
+
 
     var selectedTask by remember { mutableStateOf<Task?>(null) }
-    
+
     NavHost(
         navController = navController,
         startDestination = Screen.TaskList.route
@@ -39,7 +42,7 @@ fun AppNavigation() {
                 }
             )
         }
-        
+
         composable(Screen.AddTask.route) {
             AddTaskScreen(
                 viewModel = taskViewModel,
@@ -48,7 +51,7 @@ fun AppNavigation() {
                 }
             )
         }
-        
+
         composable(Screen.TaskDetail.route) {
             selectedTask?.let { task ->
                 TaskDetailScreen(
@@ -67,4 +70,4 @@ sealed class Screen(val route: String) {
     object TaskList : Screen("task_list")
     object AddTask : Screen("add_task")
     object TaskDetail : Screen("task_detail")
-} 
+}

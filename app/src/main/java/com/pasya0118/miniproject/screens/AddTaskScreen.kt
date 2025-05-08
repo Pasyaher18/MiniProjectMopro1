@@ -61,20 +61,20 @@ fun AddTaskScreen(
     var taskDescription by remember { mutableStateOf("") }
     var selectedPriority by remember { mutableStateOf(Priority.MEDIUM) }
     var selectedCategory by remember { mutableStateOf(Category.PERSONAL) }
-    
+
     var isImportantTask by remember { mutableStateOf(false) }
     var isTaskNameError by remember { mutableStateOf(false) }
-    
+
     // Untuk dropdown menu
     var isCategoryExpanded by remember { mutableStateOf(false) }
-    
+
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    
+
     // Simpan string message untuk snackbar
     val errorEmptyTaskMessage = stringResource(id = R.string.error_empty_task)
     val taskAddedMessage = stringResource(id = R.string.task_added)
-    
+
     Scaffold(
         snackbarHost = {
             SnackbarHost(
@@ -119,7 +119,6 @@ fun AddTaskScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Nama Tugas
             OutlinedTextField(
                 value = taskName,
                 onValueChange = {
@@ -167,7 +166,7 @@ fun AddTaskScreen(
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
             )
-            
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -190,13 +189,13 @@ fun AddTaskScreen(
                             selected = selectedPriority == priority,
                             onClick = { selectedPriority = priority }
                         )
-                        
+
                         val priorityText = when (priority) {
                             Priority.HIGH -> stringResource(id = R.string.priority_high)
                             Priority.MEDIUM -> stringResource(id = R.string.priority_medium)
                             Priority.LOW -> stringResource(id = R.string.priority_low)
                         }
-                        
+
                         Text(
                             text = priorityText,
                             style = MaterialTheme.typography.bodyLarge,
@@ -213,7 +212,7 @@ fun AddTaskScreen(
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
             )
-            
+
             ExposedDropdownMenuBox(
                 expanded = isCategoryExpanded,
                 onExpandedChange = { isCategoryExpanded = it },
@@ -232,9 +231,9 @@ fun AddTaskScreen(
                     colors = ExposedDropdownMenuDefaults.textFieldColors(),
                     modifier = Modifier
                         .fillMaxWidth()
-                        
+
                 )
-                
+
                 ExposedDropdownMenu(
                     expanded = isCategoryExpanded,
                     onDismissRequest = { isCategoryExpanded = false }
@@ -246,7 +245,7 @@ fun AddTaskScreen(
                             Category.SHOPPING -> stringResource(id = R.string.category_shopping)
                             Category.OTHER -> stringResource(id = R.string.category_other)
                         }
-                        
+
                         DropdownMenuItem(
                             text = { Text(text = categoryText) },
                             onClick = {
@@ -257,11 +256,11 @@ fun AddTaskScreen(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
 
             val saveButtonText = stringResource(id = R.string.save)
-            
+
             Button(
                 onClick = {
                     if (taskName.isBlank()) {
@@ -274,21 +273,21 @@ fun AddTaskScreen(
                         }
                     } else {
                         val finalPriority = if (isImportantTask) Priority.HIGH else selectedPriority
-                        
+
                         viewModel.addTask(
                             name = taskName,
                             description = taskDescription,
                             priority = finalPriority,
                             category = selectedCategory
                         )
-                        
+
                         scope.launch {
                             snackbarHostState.showSnackbar(
                                 message = taskAddedMessage,
                                 duration = SnackbarDuration.Short
                             )
                         }
-                        
+
                         onNavigateBack()
                     }
                 },
@@ -301,4 +300,4 @@ fun AddTaskScreen(
             }
         }
     }
-} 
+}
