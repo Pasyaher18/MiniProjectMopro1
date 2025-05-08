@@ -5,34 +5,14 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.livedata.observeAsState
 import com.pasya0118.miniproject.R
 import com.pasya0118.miniproject.model.Category
 import com.pasya0118.miniproject.model.Priority
@@ -64,7 +45,10 @@ fun TaskListScreen(
     val addTaskDesc = stringResource(id = R.string.add_task)
     val emptyListText = stringResource(id = R.string.empty_list)
     val shareTaskText = stringResource(id = R.string.share_task)
-    
+
+    // Observe the tasks LiveData from the ViewModel
+    val tasks = viewModel.tasks.observeAsState(initial = emptyList())
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -92,7 +76,7 @@ fun TaskListScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            if (viewModel.tasks.isEmpty()) {
+            if (tasks.value.isEmpty()) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -117,7 +101,7 @@ fun TaskListScreen(
                         .fillMaxSize()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
-                    items(viewModel.tasks) { task ->
+                    items(tasks.value) { task ->
                         TaskItem(
                             task = task,
                             onDelete = { viewModel.deleteTask(task.id) },
@@ -153,7 +137,7 @@ fun TaskItem(
 ) {
     val shareText = stringResource(id = R.string.share)
     val deleteText = stringResource(id = R.string.delete)
-    
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -182,7 +166,7 @@ fun TaskItem(
                         textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
                     )
                 }
-                
+
                 Row {
                     IconButton(onClick = onShare) {
                         Icon(
@@ -190,7 +174,7 @@ fun TaskItem(
                             contentDescription = shareText
                         )
                     }
-                    
+
                     IconButton(onClick = onDelete) {
                         Icon(
                             imageVector = Icons.Default.Delete,
@@ -200,18 +184,18 @@ fun TaskItem(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(4.dp))
-            
+
             Text(
                 text = task.description,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -230,13 +214,13 @@ fun PriorityBadge(priority: Priority) {
         Priority.MEDIUM -> Color(0xFFFFA500) // Orange
         Priority.LOW -> Color.Green
     }
-    
+
     val text = when (priority) {
         Priority.HIGH -> stringResource(id = R.string.priority_high)
         Priority.MEDIUM -> stringResource(id = R.string.priority_medium)
         Priority.LOW -> stringResource(id = R.string.priority_low)
     }
-    
+
     Badge(text = text, color = color)
 }
 
@@ -248,7 +232,7 @@ fun CategoryBadge(category: Category) {
         Category.SHOPPING -> stringResource(id = R.string.category_shopping)
         Category.OTHER -> stringResource(id = R.string.category_other)
     }
-    
+
     Badge(text = text, color = MaterialTheme.colorScheme.tertiary)
 }
 
@@ -264,4 +248,4 @@ fun Badge(text: String, color: Color) {
             style = MaterialTheme.typography.bodySmall
         )
     }
-} 
+}

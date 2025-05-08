@@ -1,5 +1,6 @@
 package com.pasya0118.miniproject
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,7 +15,11 @@ import com.pasya0118.miniproject.ui.theme.MiniProjectMobpro1PasyaTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            enableEdgeToEdge()
+        }
+
         setContent {
             MiniProjectMobpro1PasyaTheme {
                 Surface(

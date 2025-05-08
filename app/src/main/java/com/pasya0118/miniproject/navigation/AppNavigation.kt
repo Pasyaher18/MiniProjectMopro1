@@ -19,10 +19,10 @@ import com.pasya0118.miniproject.viewmodel.TaskViewModel
 fun AppNavigation() {
     val navController = rememberNavController()
     val taskViewModel: TaskViewModel = viewModel()
-    
+
 
     var selectedTask by remember { mutableStateOf<Task?>(null) }
-    
+
     NavHost(
         navController = navController,
         startDestination = Screen.TaskList.route
@@ -39,7 +39,7 @@ fun AppNavigation() {
                 }
             )
         }
-        
+
         composable(Screen.AddTask.route) {
             AddTaskScreen(
                 viewModel = taskViewModel,
@@ -48,7 +48,7 @@ fun AppNavigation() {
                 }
             )
         }
-        
+
         composable(Screen.TaskDetail.route) {
             selectedTask?.let { task ->
                 TaskDetailScreen(
@@ -67,4 +67,4 @@ sealed class Screen(val route: String) {
     object TaskList : Screen("task_list")
     object AddTask : Screen("add_task")
     object TaskDetail : Screen("task_detail")
-} 
+}
