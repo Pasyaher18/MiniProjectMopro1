@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -51,7 +52,7 @@ fun EditTaskScreen(
     val errorEmptyTaskMessage = stringResource(id = R.string.error_empty_task)
     val taskUpdatedMessage = stringResource(id = R.string.task_updated)
 
-    val categories = Category.entries.map {it.name}
+    val categories = Category.entries.map { it.name }
 
     Scaffold(
         snackbarHost = {
@@ -82,6 +83,42 @@ fun EditTaskScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(id = R.string.back)
+                        )
+                    }
+                },
+                actions = {
+                    // Tombol ceklis untuk menyimpan perubahan
+                    IconButton(onClick = {
+                        if (taskName.isBlank()) {
+                            isTaskNameError = true
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = errorEmptyTaskMessage,
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                        } else {
+                            viewModel.updateTask(
+                                taskId,
+                                taskName,
+                                taskDescription,
+                                selectedPriority.name,
+                                selectedCategory.name
+                            )
+
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = taskUpdatedMessage,
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+
+                            onNavigateBack()
+                        }
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Save Changes"
                         )
                     }
                 }
@@ -199,7 +236,7 @@ fun EditTaskScreen(
                     value = selectedCategory.name,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Category")},
+                    label = { Text("Category") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isCategoryExpanded) },
                     colors = ExposedDropdownMenuDefaults.textFieldColors(),
                     modifier = Modifier.fillMaxWidth().clickable { isCategoryExpanded = !isCategoryExpanded }

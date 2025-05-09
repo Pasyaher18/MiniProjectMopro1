@@ -2,8 +2,6 @@
 package com.pasya0118.miniproject.screens
 
 import android.content.Intent
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,19 +28,20 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.pasya0118.miniproject.R
 import com.pasya0118.miniproject.model.Task
 import com.pasya0118.miniproject.viewmodel.TaskViewModel
 
-@RequiresApi(Build.VERSION_CODES.N)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskDetailScreen(
@@ -51,15 +50,19 @@ fun TaskDetailScreen(
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
+    var showDialog by remember { mutableStateOf(false) }
 
-    val shareTaskString = stringResource(id = R.string.share_task)
-    val backString = stringResource(id = R.string.back)
-    val shareString = stringResource(id = R.string.share)
-    val deleteString = stringResource(id = R.string.delete)
-    val taskNameString = stringResource(id = R.string.task_name)
-    val taskDescriptionString = stringResource(id = R.string.task_description)
-    val priorityString = stringResource(id = R.string.priority)
-    val categoryString = stringResource(id = R.string.category)
+    if (showDialog) {
+        DisplayAlertDialog(
+            title = "Hapus catatan ini?",
+            message = "Apakah Anda yakin ingin menghapus task ini?",
+            onConfirm = {
+                viewModel.deleteTask(task.id)
+                onNavigateBack()
+            },
+            onDismiss = { showDialog = false }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -73,7 +76,7 @@ fun TaskDetailScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = backString
+                            contentDescription = "Back"
                         )
                     }
                 },
@@ -87,25 +90,22 @@ fun TaskDetailScreen(
                             }
                             context.startActivity(Intent.createChooser(
                                 shareIntent,
-                                shareTaskString
+                                "Share Task"
                             ))
                         }
                     ) {
                         Icon(
                             imageVector = Icons.Default.Share,
-                            contentDescription = shareString
+                            contentDescription = "Share"
                         )
                     }
 
                     IconButton(
-                        onClick = {
-                            viewModel.deleteTask(task.id)
-                            onNavigateBack()
-                        }
+                        onClick = { showDialog = true }
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = deleteString,
+                            contentDescription = "Delete",
                             tint = Color.Red
                         )
                     }
@@ -120,7 +120,6 @@ fun TaskDetailScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-
             val statusBackgroundColor = if (task.isCompleted) {
                 Color(0xFF4CAF50)
             } else {
@@ -161,7 +160,7 @@ fun TaskDetailScreen(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = taskNameString,
+                        text = "Task Name",
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -173,10 +172,8 @@ fun TaskDetailScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
                     Text(
-                        text = taskDescriptionString,
+                        text = "Task Description",
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -187,26 +184,24 @@ fun TaskDetailScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
                             Text(
-                                text = priorityString,
+                                text = "Priority",
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
 
                             val priorityText = when (task.priority) {
                                 com.pasya0118.miniproject.model.Priority.HIGH ->
-                                    stringResource(id = R.string.priority_high)
+                                    "High"
                                 com.pasya0118.miniproject.model.Priority.MEDIUM ->
-                                    stringResource(id = R.string.priority_medium)
+                                    "Medium"
                                 com.pasya0118.miniproject.model.Priority.LOW ->
-                                    stringResource(id = R.string.priority_low)
+                                    "Low"
                             }
 
                             Text(
@@ -217,20 +212,20 @@ fun TaskDetailScreen(
 
                         Column {
                             Text(
-                                text = categoryString,
+                                text = "Category",
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
 
                             val categoryText = when (task.category) {
                                 com.pasya0118.miniproject.model.Category.WORK ->
-                                    stringResource(id = R.string.category_work)
+                                    "Work"
                                 com.pasya0118.miniproject.model.Category.PERSONAL ->
-                                    stringResource(id = R.string.category_personal)
+                                    "Personal"
                                 com.pasya0118.miniproject.model.Category.SHOPPING ->
-                                    stringResource(id = R.string.category_shopping)
+                                    "Shopping"
                                 com.pasya0118.miniproject.model.Category.OTHER ->
-                                    stringResource(id = R.string.category_other)
+                                    "Other"
                             }
 
                             Text(
@@ -244,3 +239,5 @@ fun TaskDetailScreen(
         }
     }
 }
+
+

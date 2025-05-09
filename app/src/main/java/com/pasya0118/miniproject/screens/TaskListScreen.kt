@@ -8,12 +8,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,11 +27,15 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import com.pasya0118.miniproject.R
 import com.pasya0118.miniproject.model.Category
 import com.pasya0118.miniproject.model.Priority
 import com.pasya0118.miniproject.model.Task
 import com.pasya0118.miniproject.viewmodel.TaskViewModel
+
 
 @RequiresApi(Build.VERSION_CODES.N)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,7 +52,6 @@ fun TaskListScreen(
     val emptyListText = stringResource(id = R.string.empty_list)
     val shareTaskText = stringResource(id = R.string.share_task)
 
-    // Observe the tasks LiveData from the ViewModel
     val tasks = viewModel.tasks.observeAsState(initial = emptyList())
 
     Scaffold(
@@ -137,12 +142,27 @@ fun TaskItem(
 ) {
     val shareText = stringResource(id = R.string.share)
     val deleteText = stringResource(id = R.string.delete)
+    var showDialog by remember { mutableStateOf(false) }
+
+    if (showDialog) {
+        DisplayAlertDialog(
+            title = "Hapus jadwal ini?",
+            message = "Apakah Anda yakin ingin menghapus jadwal ini?",
+            onConfirm = {
+                onDelete()
+                showDialog = false
+            },
+            onDismiss = { showDialog = false }
+        )
+    }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(8.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -157,13 +177,15 @@ fun TaskItem(
                 ) {
                     Checkbox(
                         checked = task.isCompleted,
-                        onCheckedChange = { onToggleComplete() }
+                        onCheckedChange = { onToggleComplete() },
+                        colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
                     )
                     Text(
                         text = task.name,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleMedium,
-                        textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
+                        textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
+                        color = if (task.isCompleted) Color.Gray else MaterialTheme.colorScheme.onBackground
                     )
                 }
 
@@ -171,11 +193,12 @@ fun TaskItem(
                     IconButton(onClick = onShare) {
                         Icon(
                             imageVector = Icons.Default.Share,
-                            contentDescription = shareText
+                            contentDescription = shareText,
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
 
-                    IconButton(onClick = onDelete) {
+                    IconButton(onClick = { showDialog = true }) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = deleteText,
@@ -185,8 +208,7 @@ fun TaskItem(
                 }
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
-
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = task.description,
                 style = MaterialTheme.typography.bodyMedium,
@@ -201,6 +223,7 @@ fun TaskItem(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 PriorityBadge(priority = task.priority)
+
                 CategoryBadge(category = task.category)
             }
         }
