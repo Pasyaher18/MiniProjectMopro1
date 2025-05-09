@@ -1,6 +1,7 @@
 package com.pasya0118.miniproject.screens
 
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -49,6 +50,8 @@ fun EditTaskScreen(
 
     val errorEmptyTaskMessage = stringResource(id = R.string.error_empty_task)
     val taskUpdatedMessage = stringResource(id = R.string.task_updated)
+
+    val categories = Category.entries.map {it.name}
 
     Scaffold(
         snackbarHost = {
@@ -196,10 +199,10 @@ fun EditTaskScreen(
                     value = selectedCategory.name,
                     onValueChange = {},
                     readOnly = true,
+                    label = { Text("Category")},
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isCategoryExpanded) },
                     colors = ExposedDropdownMenuDefaults.textFieldColors(),
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().clickable { isCategoryExpanded = !isCategoryExpanded }
                 )
 
                 ExposedDropdownMenu(
