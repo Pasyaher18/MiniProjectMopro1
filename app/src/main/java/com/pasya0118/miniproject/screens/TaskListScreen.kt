@@ -7,6 +7,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -51,6 +54,7 @@ fun TaskListScreen(
     val addTaskDesc = stringResource(id = R.string.add_task)
     val emptyListText = stringResource(id = R.string.empty_list)
     val shareTaskText = stringResource(id = R.string.share_task)
+    var showList by remember { mutableStateOf(true) }
 
     val tasks = viewModel.tasks.observeAsState(initial = emptyList())
 
@@ -61,7 +65,22 @@ fun TaskListScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                ),
+                actions = {
+                    // Toggle antara Grid dan List dengan mengganti ikon
+                    IconButton(onClick = { showList = !showList }) {
+                        Icon(
+                            painter = painterResource(
+                                id = if (showList) R.drawable.baseline_grid_view_24
+                                else R.drawable.baseline_view_list_24
+                            ),
+                            contentDescription = stringResource(
+                                id = if (showList) R.string.grid else R.string.list
+                            ),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
             )
         },
         floatingActionButton = {
@@ -101,30 +120,52 @@ fun TaskListScreen(
                     )
                 }
             } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    items(tasks.value) { task ->
-                        TaskItem(
-                            task = task,
-                            onDelete = { viewModel.deleteTask(task.id) },
-                            onToggleComplete = { viewModel.toggleTaskCompletion(task.id) },
-                            onShare = {
-                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                    type = "text/plain"
-                                    putExtra(Intent.EXTRA_SUBJECT, task.name)
-                                    putExtra(Intent.EXTRA_TEXT, "${task.name}: ${task.description}")
-                                }
-                                context.startActivity(Intent.createChooser(
-                                    shareIntent,
-                                    shareTaskText
-                                ))
-                            },
-                            onClick = { onTaskClick(task) }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+                if (showList) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        items(tasks.value) { task ->
+                            TaskItem(
+                                task = task,
+                                onDelete = { viewModel.deleteTask(task.id) },
+                                onToggleComplete = { viewModel.toggleTaskCompletion(task.id) },
+                                onShare = {
+                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                        type = "text/plain"
+                                        putExtra(Intent.EXTRA_SUBJECT, task.name)
+                                        putExtra(Intent.EXTRA_TEXT, "${task.name}: ${task.description}")
+                                    }
+                                    context.startActivity(Intent.createChooser(shareIntent, shareTaskText))
+                                },
+                                onClick = { onTaskClick(task) }
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                } else {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        items(tasks.value) { task ->
+                            TaskItem(
+                                task = task,
+                                onDelete = { viewModel.deleteTask(task.id) },
+                                onToggleComplete = { viewModel.toggleTaskCompletion(task.id) },
+                                onShare = {
+                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                        type = "text/plain"
+                                        putExtra(Intent.EXTRA_SUBJECT, task.name)
+                                        putExtra(Intent.EXTRA_TEXT, "${task.name}: ${task.description}")
+                                    }
+                                    context.startActivity(Intent.createChooser(shareIntent, shareTaskText))
+                                },
+                                onClick = { onTaskClick(task) }
+                            )
+                        }
                     }
                 }
             }
@@ -144,12 +185,13 @@ fun TaskItem(
     val deleteText = stringResource(id = R.string.delete)
     var showDialog by remember { mutableStateOf(false) }
 
+    // Dialog konfirmasi sebelum menghapus
     if (showDialog) {
         DisplayAlertDialog(
             title = "Hapus jadwal ini?",
             message = "Apakah Anda yakin ingin menghapus jadwal ini?",
             onConfirm = {
-                onDelete()
+                onDelete()  // Menghapus task
                 showDialog = false
             },
             onDismiss = { showDialog = false }
@@ -159,7 +201,7 @@ fun TaskItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick)  // TaskItem bisa diklik
             .padding(vertical = 8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(8.dp)
@@ -177,7 +219,7 @@ fun TaskItem(
                 ) {
                     Checkbox(
                         checked = task.isCompleted,
-                        onCheckedChange = { onToggleComplete() },
+                        onCheckedChange = { onToggleComplete() },  // Toggle status task
                         colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
                     )
                     Text(
@@ -185,11 +227,17 @@ fun TaskItem(
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleMedium,
                         textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
-                        color = if (task.isCompleted) Color.Gray else MaterialTheme.colorScheme.onBackground
+                        color = if (task.isCompleted) Color.Gray else MaterialTheme.colorScheme.onBackground,
+                        maxLines = 1,  // Batasi panjang teks menjadi 1 baris
+                        overflow = TextOverflow.Ellipsis  // Jika teks panjang, akan dipotong dengan elipsis
                     )
                 }
 
-                Row {
+                // Menambahkan Row dengan properti SpaceBetween agar tombol terpisah dengan baik
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)  // Memberikan jarak antar tombol
+                ) {
+                    // Tombol Share
                     IconButton(onClick = onShare) {
                         Icon(
                             imageVector = Icons.Default.Share,
@@ -198,11 +246,12 @@ fun TaskItem(
                         )
                     }
 
-                    IconButton(onClick = { showDialog = true }) {
+                    // Tombol Hapus dengan warna merah
+                    IconButton(onClick = { showDialog = true }) {  // Menampilkan dialog saat hapus diklik
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = deleteText,
-                            tint = Color.Red
+                            tint = Color.Red // Menambahkan warna merah pada tombol hapus
                         )
                     }
                 }
@@ -212,8 +261,8 @@ fun TaskItem(
             Text(
                 text = task.description,
                 style = MaterialTheme.typography.bodyMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                maxLines = 4,
+                overflow = TextOverflow.Ellipsis  // Jika teks panjang, akan dipotong dengan elipsis
             )
 
             Spacer(modifier = Modifier.height(8.dp))

@@ -70,7 +70,8 @@ fun TaskDetailScreen(
                 title = { Text(task.name) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+
                 ),
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {

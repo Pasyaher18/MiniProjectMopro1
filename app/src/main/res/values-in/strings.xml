@@ -36,4 +36,7 @@
     <string name="task_updated">Pembaruan Tugas</string>
     <string name="edit_task">Edit Tugas</string>
     <string name="save_changes">Simpan Perubahan</string>
+
+    <string name="list">Tampilan List</string>
+    <string name="grid">Tampilan Grid</string>
 </resources>
