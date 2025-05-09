@@ -37,8 +37,8 @@ fun EditTaskScreen(
 
     var taskName by remember { mutableStateOf(task.name) }
     var taskDescription by remember { mutableStateOf(task.description) }
-    var selectedPriority by remember { mutableStateOf(task.priority ?: Priority.MEDIUM) }
-    var selectedCategory by remember { mutableStateOf(task.category ?: Category.PERSONAL) }
+    var selectedPriority by remember { mutableStateOf(task.priority) }
+    var selectedCategory by remember { mutableStateOf(task.category) }
     var isImportantTask by remember { mutableStateOf(task.isCompleted.not()) }
 
     var isTaskNameError by remember { mutableStateOf(false) }
@@ -157,7 +157,7 @@ fun EditTaskScreen(
                     )
                     .padding(16.dp)
             ) {
-                Priority.values().forEach { priority ->
+                Priority.entries.forEach { priority ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
@@ -206,7 +206,7 @@ fun EditTaskScreen(
                     expanded = isCategoryExpanded,
                     onDismissRequest = { isCategoryExpanded = false }
                 ) {
-                    Category.values().forEach { category ->
+                    Category.entries.forEach { category ->
                         DropdownMenuItem(
                             text = { Text(text = category.name) },
                             onClick = {
