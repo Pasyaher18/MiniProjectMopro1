@@ -23,12 +23,10 @@ class TaskViewModel : ViewModel() {
         _tasks.add(newTask)
     }
 
-
     @RequiresApi(Build.VERSION_CODES.N)
     fun deleteTask(taskId: String) {
         _tasks.removeIf { it.id == taskId }
     }
-
 
     fun toggleTaskCompletion(taskId: String) {
         val index = _tasks.indexOfFirst { it.id == taskId }
@@ -37,4 +35,15 @@ class TaskViewModel : ViewModel() {
             _tasks[index] = task.copy(isCompleted = !task.isCompleted)
         }
     }
-} 
+
+    fun getTaskById(taskId: String): Task? {
+        return _tasks.find { it.id == taskId }
+    }
+
+    fun updateTask(updatedTask: Task) {
+        val index = _tasks.indexOfFirst { it.id == updatedTask.id }
+        if (index != -1) {
+            _tasks[index] = updatedTask
+        }
+    }
+}

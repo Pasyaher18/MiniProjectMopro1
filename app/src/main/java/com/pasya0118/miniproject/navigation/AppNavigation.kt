@@ -1,5 +1,7 @@
 package com.pasya0118.miniproject.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -15,14 +17,14 @@ import com.pasya0118.miniproject.screens.TaskDetailScreen
 import com.pasya0118.miniproject.screens.TaskListScreen
 import com.pasya0118.miniproject.viewmodel.TaskViewModel
 
+@RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
     val taskViewModel: TaskViewModel = viewModel()
-    
 
     var selectedTask by remember { mutableStateOf<Task?>(null) }
-    
+
     NavHost(
         navController = navController,
         startDestination = Screen.TaskList.route
@@ -31,6 +33,7 @@ fun AppNavigation() {
             TaskListScreen(
                 viewModel = taskViewModel,
                 onAddTask = {
+                    selectedTask = null
                     navController.navigate(Screen.AddTask.route)
                 },
                 onTaskClick = { task ->
@@ -39,16 +42,17 @@ fun AppNavigation() {
                 }
             )
         }
-        
+
         composable(Screen.AddTask.route) {
             AddTaskScreen(
                 viewModel = taskViewModel,
+                task = null,
                 onNavigateBack = {
                     navController.popBackStack()
                 }
             )
         }
-        
+
         composable(Screen.TaskDetail.route) {
             selectedTask?.let { task ->
                 TaskDetailScreen(
@@ -56,9 +60,20 @@ fun AppNavigation() {
                     viewModel = taskViewModel,
                     onNavigateBack = {
                         navController.popBackStack()
-                    }
+                    },
+                    navController = navController
                 )
             }
+        }
+
+        composable(Screen.EditTask.route) {
+            AddTaskScreen(
+                viewModel = taskViewModel,
+                task = selectedTask,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
@@ -66,5 +81,16 @@ fun AppNavigation() {
 sealed class Screen(val route: String) {
     object TaskList : Screen("task_list")
     object AddTask : Screen("add_task")
-    object TaskDetail : Screen("task_detail")
-} 
+
+    object TaskDetail : Screen("task_detail") {
+        fun withId(taskId: String): String {
+            return "task_detail/$taskId"
+        }
+    }
+
+    object EditTask : Screen("edit_task") {
+        fun withId(taskId: String): String {
+            return "edit_task/$taskId"
+        }
+    }
+}

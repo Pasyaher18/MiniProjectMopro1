@@ -1,9 +1,12 @@
 package com.pasya0118.miniproject.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import java.util.UUID
 
+@Entity(tableName = "tasks")
 data class Task(
-    val id: String = UUID.randomUUID().toString(),
+    @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val name: String,
     val description: String,
     val priority: Priority,
@@ -17,4 +20,4 @@ enum class Priority {
 
 enum class Category {
     WORK, PERSONAL, SHOPPING, OTHER
-} 
+}

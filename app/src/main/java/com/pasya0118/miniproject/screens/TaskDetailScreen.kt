@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -29,6 +30,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +42,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.pasya0118.miniproject.R
 import com.pasya0118.miniproject.model.Task
 import com.pasya0118.miniproject.viewmodel.TaskViewModel
@@ -47,9 +53,11 @@ import com.pasya0118.miniproject.viewmodel.TaskViewModel
 fun TaskDetailScreen(
     task: Task,
     viewModel: TaskViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    navController: NavController
 ) {
     val context = LocalContext.current
+    var showDialog by remember { mutableStateOf(false) }
 
     val shareTaskString = stringResource(id = R.string.share_task)
     val backString = stringResource(id = R.string.back)
@@ -59,7 +67,18 @@ fun TaskDetailScreen(
     val taskDescriptionString = stringResource(id = R.string.task_description)
     val priorityString = stringResource(id = R.string.priority)
     val categoryString = stringResource(id = R.string.category)
-    
+
+    if (showDialog) {
+        DisplayAlertDialog(
+            onDismissRequest = { showDialog = false },
+            onConfirmation = {
+                viewModel.deleteTask(task.id)
+                onNavigateBack()
+                showDialog = false
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -79,6 +98,16 @@ fun TaskDetailScreen(
                 actions = {
                     IconButton(
                         onClick = {
+                            navController.navigate("edit_task")
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit"
+                        )
+                    }
+                    IconButton(
+                        onClick = {
                             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                 type = "text/plain"
                                 putExtra(Intent.EXTRA_SUBJECT, task.name)
@@ -95,12 +124,8 @@ fun TaskDetailScreen(
                             contentDescription = shareString
                         )
                     }
-                    
                     IconButton(
-                        onClick = {
-                            viewModel.deleteTask(task.id)
-                            onNavigateBack()
-                        }
+                        onClick = { showDialog = true }
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
@@ -119,19 +144,18 @@ fun TaskDetailScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-
             val statusBackgroundColor = if (task.isCompleted) {
                 Color(0xFF4CAF50)
             } else {
                 Color(0xFFFFA000)
             }
-            
+
             val statusText = if (task.isCompleted) {
                 "Selesai"
             } else {
                 "Belum Selesai"
             }
-            
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -169,8 +193,6 @@ fun TaskDetailScreen(
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold
                     )
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -183,8 +205,6 @@ fun TaskDetailScreen(
                         text = task.description.ifEmpty { "-" },
                         style = MaterialTheme.typography.bodyLarge
                     )
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -198,7 +218,7 @@ fun TaskDetailScreen(
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
-                            
+
                             val priorityText = when (task.priority) {
                                 com.pasya0118.miniproject.model.Priority.HIGH ->
                                     stringResource(id = R.string.priority_high)
@@ -207,20 +227,20 @@ fun TaskDetailScreen(
                                 com.pasya0118.miniproject.model.Priority.LOW ->
                                     stringResource(id = R.string.priority_low)
                             }
-                            
+
                             Text(
                                 text = priorityText,
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }
-                        
+
                         Column {
                             Text(
                                 text = categoryString,
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
-                            
+
                             val categoryText = when (task.category) {
                                 com.pasya0118.miniproject.model.Category.WORK ->
                                     stringResource(id = R.string.category_work)
@@ -231,7 +251,7 @@ fun TaskDetailScreen(
                                 com.pasya0118.miniproject.model.Category.OTHER ->
                                     stringResource(id = R.string.category_other)
                             }
-                            
+
                             Text(
                                 text = categoryText,
                                 style = MaterialTheme.typography.bodyLarge
@@ -242,4 +262,4 @@ fun TaskDetailScreen(
             }
         }
     }
-} 
+}

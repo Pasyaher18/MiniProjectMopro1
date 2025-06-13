@@ -22,4 +22,9 @@
     <string name="category_personal">Personal</string>
     <string name="category_shopping">Shopping</string>
     <string name="category_other">Other</string>
+    <string name="pesan_hapus">Hapus catatan ini?</string>
+    <string name="tombol_hapus">Hapus</string>
+    <string name="tombol_batal">batal</string>
+    <string name="list">Tampilan List</string>
+    <string name="grid">Tampilan grid</string>
 </resources>

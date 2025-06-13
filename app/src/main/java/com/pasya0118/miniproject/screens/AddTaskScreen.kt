@@ -39,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import com.pasya0118.miniproject.R
 import com.pasya0118.miniproject.model.Category
 import com.pasya0118.miniproject.model.Priority
+import com.pasya0118.miniproject.model.Task
 import com.pasya0118.miniproject.viewmodel.TaskViewModel
 import kotlinx.coroutines.launch
 
@@ -55,26 +57,26 @@ import kotlinx.coroutines.launch
 @Composable
 fun AddTaskScreen(
     viewModel: TaskViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    task: Task? = null
 ) {
-    var taskName by remember { mutableStateOf("") }
-    var taskDescription by remember { mutableStateOf("") }
-    var selectedPriority by remember { mutableStateOf(Priority.MEDIUM) }
-    var selectedCategory by remember { mutableStateOf(Category.PERSONAL) }
-    
-    var isImportantTask by remember { mutableStateOf(false) }
+    var taskName by rememberSaveable { mutableStateOf(task?.name ?: "") }
+    var taskDescription by rememberSaveable { mutableStateOf(task?.description ?: "") }
+    var selectedPriority by rememberSaveable { mutableStateOf(task?.priority ?: Priority.MEDIUM) }
+    var selectedCategory by rememberSaveable { mutableStateOf(task?.category ?: Category.PERSONAL) }
+
+
+    var isImportantTask by rememberSaveable { mutableStateOf(task?.priority == Priority.HIGH) }
     var isTaskNameError by remember { mutableStateOf(false) }
-    
-    // Untuk dropdown menu
+
     var isCategoryExpanded by remember { mutableStateOf(false) }
-    
+
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    
-    // Simpan string message untuk snackbar
+
     val errorEmptyTaskMessage = stringResource(id = R.string.error_empty_task)
     val taskAddedMessage = stringResource(id = R.string.task_added)
-    
+
     Scaffold(
         snackbarHost = {
             SnackbarHost(
@@ -167,7 +169,7 @@ fun AddTaskScreen(
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
             )
-            
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -190,13 +192,13 @@ fun AddTaskScreen(
                             selected = selectedPriority == priority,
                             onClick = { selectedPriority = priority }
                         )
-                        
+
                         val priorityText = when (priority) {
                             Priority.HIGH -> stringResource(id = R.string.priority_high)
                             Priority.MEDIUM -> stringResource(id = R.string.priority_medium)
                             Priority.LOW -> stringResource(id = R.string.priority_low)
                         }
-                        
+
                         Text(
                             text = priorityText,
                             style = MaterialTheme.typography.bodyLarge,
@@ -213,7 +215,7 @@ fun AddTaskScreen(
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
             )
-            
+
             ExposedDropdownMenuBox(
                 expanded = isCategoryExpanded,
                 onExpandedChange = { isCategoryExpanded = it },
@@ -232,9 +234,9 @@ fun AddTaskScreen(
                     colors = ExposedDropdownMenuDefaults.textFieldColors(),
                     modifier = Modifier
                         .fillMaxWidth()
-                        
+
                 )
-                
+
                 ExposedDropdownMenu(
                     expanded = isCategoryExpanded,
                     onDismissRequest = { isCategoryExpanded = false }
@@ -246,7 +248,7 @@ fun AddTaskScreen(
                             Category.SHOPPING -> stringResource(id = R.string.category_shopping)
                             Category.OTHER -> stringResource(id = R.string.category_other)
                         }
-                        
+
                         DropdownMenuItem(
                             text = { Text(text = categoryText) },
                             onClick = {
@@ -257,11 +259,11 @@ fun AddTaskScreen(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
 
             val saveButtonText = stringResource(id = R.string.save)
-            
+
             Button(
                 onClick = {
                     if (taskName.isBlank()) {
@@ -274,31 +276,41 @@ fun AddTaskScreen(
                         }
                     } else {
                         val finalPriority = if (isImportantTask) Priority.HIGH else selectedPriority
-                        
-                        viewModel.addTask(
-                            name = taskName,
-                            description = taskDescription,
-                            priority = finalPriority,
-                            category = selectedCategory
-                        )
-                        
+
+                        if (task != null) {
+                            val updatedTask = task.copy(
+                                name = taskName,
+                                description = taskDescription,
+                                priority = finalPriority,
+                                category = selectedCategory
+                            )
+                            viewModel.updateTask(updatedTask)
+                        } else {
+                            viewModel.addTask(
+                                name = taskName,
+                                description = taskDescription,
+                                priority = finalPriority,
+                                category = selectedCategory
+                            )
+                        }
+
                         scope.launch {
                             snackbarHostState.showSnackbar(
                                 message = taskAddedMessage,
                                 duration = SnackbarDuration.Short
                             )
                         }
-                        
+
                         onNavigateBack()
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = saveButtonText,
+                    text = stringResource(id = R.string.save),
                     modifier = Modifier.padding(vertical = 4.dp)
                 )
             }
         }
     }
-} 
+}

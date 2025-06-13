@@ -23,4 +23,9 @@
     <string name="category_personal">Pribadi</string>
     <string name="category_shopping">Belanja</string>
     <string name="category_other">Lainnya</string>
-</resources> 
+    <string name="pesan_hapus">Hapus catatan ini?</string>
+    <string name="tombol_hapus">Hapus</string>
+    <string name="tombol_batal">batal</string>
+    <string name="list">Tampilan List</string>
+    <string name="grid">Tampilan grid</string>
+</resources>
