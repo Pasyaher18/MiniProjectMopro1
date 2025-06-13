@@ -1,7 +1,9 @@
 package com.pasya0118.miniproject.screens
 
+import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -41,6 +43,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,8 +59,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.navigation.NavController
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import com.pasya0118.miniproject.BuildConfig
 import com.pasya0118.miniproject.R
+import com.pasya0118.miniproject.data.User
 import com.pasya0118.miniproject.model.Category
 import com.pasya0118.miniproject.model.Priority
 import com.pasya0118.miniproject.model.Task
@@ -144,7 +156,6 @@ fun GridTaskItem(
     }
 }
 
-
 @RequiresApi(Build.VERSION_CODES.N)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -164,7 +175,13 @@ fun TaskListScreen(
     var showDialog by remember { mutableStateOf(false) }
     var taskToDelete by remember { mutableStateOf<Task?>(null) }
     val dataStore = SettingsDataStore(LocalContext.current)
+    val user by dataStore.userFlow.collectAsState(User())
     val showList by dataStore.layoutFlow.collectAsState(true)
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchTasksFromApi()
+        Log.d("TaskListScreen", "fetchTasksFromApi() dipanggil")
+    }
 
     if (showDialog && taskToDelete != null) {
         DisplayAlertDialog(
@@ -212,6 +229,20 @@ fun TaskListScreen(
                         Icon(
                             painter = painterResource(R.drawable.baseline_delete_24),
                             contentDescription = stringResource(R.string.trash),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    IconButton(onClick = {
+                        if (user.email.isEmpty()) {
+                            CoroutineScope(Dispatchers.IO).launch { signIn(context, dataStore) }
+                        }
+                        else {
+                            Log.d("SIGN-IN", "User: $user")
+                        }
+                    }) {
+                        Icon(
+                            painter = painterResource(R.drawable.baseline_account_circle_24),
+                            contentDescription = stringResource(R.string.profil),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -412,6 +443,47 @@ fun TaskItem(
         }
     }
 }
+
+suspend fun signIn(context: Context, dataStore: SettingsDataStore) {
+    val googleIdOption: GetGoogleIdOption= GetGoogleIdOption.Builder()
+        .setFilterByAuthorizedAccounts(false)
+        .setServerClientId(BuildConfig.API_KEY)
+        .build()
+
+    val request: GetCredentialRequest = GetCredentialRequest.Builder()
+        .addCredentialOption(googleIdOption)
+        .build()
+
+    try {
+        val credentialManager = CredentialManager.create(context)
+        val result = credentialManager.getCredential(context, request)
+        handleSignIn(result, dataStore)
+    } catch (e: GetCredentialException) {
+        Log.e("SIGN-IN", "Error:${e.errorMessage}")
+    }
+}
+
+private fun handleSignIn(
+    result: androidx.credentials.GetCredentialResponse,
+    dataStore: SettingsDataStore
+) {
+    val credential = result.credential
+    if (credential is CustomCredential &&
+        credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+        try {
+            val googleId = GoogleIdTokenCredential.createFrom(credential.data)
+            val nama = googleId.displayName ?: ""
+            val email = googleId.id
+            val photoUrl = googleId.profilePictureUri.toString()
+        } catch (e: GoogleIdTokenParsingException) {
+            Log.e("SIGN-IN", "Error: ${e.message}")
+        }
+    }
+    else {
+        Log.e("SIGN-IN", "Error: unrecognized custom credential type.")
+    }
+}
+
 @Composable
 fun PriorityBadge(priority: Priority) {
     val color = when (priority) {
