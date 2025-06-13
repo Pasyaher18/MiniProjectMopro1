@@ -18,6 +18,7 @@ import com.pasya0118.miniproject.screens.TaskListScreen
 import com.pasya0118.miniproject.screens.TrashScreen
 import com.pasya0118.miniproject.viewmodel.TaskViewModel
 
+
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun AppNavigation() {

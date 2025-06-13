@@ -29,4 +29,6 @@
     <string name="grid">Tampilan grid</string>
     <string name="trash">Tampilkan Sampah</string>
     <string name="profil">Profil</string>
+    <string name="tutup">Tutup</string>
+    <string name="logout">Logout</string>
 </resources>

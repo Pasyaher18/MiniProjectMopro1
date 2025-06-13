@@ -44,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.pasya0118.miniproject.R
+import com.pasya0118.miniproject.data.User
 import com.pasya0118.miniproject.model.Task
 import com.pasya0118.miniproject.viewmodel.TaskViewModel
 

@@ -59,9 +59,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
+import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.ClearCredentialException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.navigation.NavController
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
@@ -172,6 +175,7 @@ fun TaskListScreen(
     val emptyListText = stringResource(id = R.string.empty_list)
     val shareTaskText = stringResource(id = R.string.share_task)
 
+
     var showDialog by remember { mutableStateOf(false) }
     var taskToDelete by remember { mutableStateOf<Task?>(null) }
     val dataStore = SettingsDataStore(LocalContext.current)
@@ -238,6 +242,7 @@ fun TaskListScreen(
                         }
                         else {
                             Log.d("SIGN-IN", "User: $user")
+                            showDialog = true
                         }
                     }) {
                         Icon(
@@ -266,6 +271,14 @@ fun TaskListScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            if (showDialog) {
+                ProfilDialog(
+                    user = user,
+                    onDismissRequest = { showDialog = false}) {
+                    CoroutineScope(Dispatchers.IO).launch { signOut(context, dataStore) }
+                    showDialog = true
+                }
+            }
             if (viewModel.tasks.isEmpty()) {
                 Column(
                     modifier = Modifier
@@ -459,30 +472,57 @@ suspend fun signIn(context: Context, dataStore: SettingsDataStore) {
         val result = credentialManager.getCredential(context, request)
         handleSignIn(result, dataStore)
     } catch (e: GetCredentialException) {
+        if (e.message?.contains("User cancelled", ignoreCase = true) == true ||
+            e.errorMessage?.contains("cancelled", ignoreCase = true) == true
+            ) {
+            Log.w("SIGN-IN", "Sign in dibatalkan pengguna")
+        } else
         Log.e("SIGN-IN", "Error:${e.errorMessage}")
     }
 }
 
 private fun handleSignIn(
-    result: androidx.credentials.GetCredentialResponse,
+    result: GetCredentialResponse,
     dataStore: SettingsDataStore
 ) {
     val credential = result.credential
     if (credential is CustomCredential &&
-        credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+        credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+    ) {
         try {
             val googleId = GoogleIdTokenCredential.createFrom(credential.data)
-            val nama = googleId.displayName ?: ""
+            val name = googleId.displayName ?: ""
             val email = googleId.id
-            val photoUrl = googleId.profilePictureUri.toString()
+            val photoUrl = googleId.profilePictureUri?.toString() ?: ""
+
+            val user = User(name = name, email = email, photoUrl = photoUrl)
+
+            Log.d("SIGN-IN", "User Info: name=${user.name}, email=${user.email}, photoUrl=${user.photoUrl}")
+
+            CoroutineScope(Dispatchers.IO).launch {
+                dataStore.saveData(user)
+            }
+
         } catch (e: GoogleIdTokenParsingException) {
             Log.e("SIGN-IN", "Error: ${e.message}")
         }
-    }
-    else {
+    } else {
         Log.e("SIGN-IN", "Error: unrecognized custom credential type.")
     }
 }
+
+private suspend fun signOut(context: Context, dataStore: SettingsDataStore) {
+    try {
+        val credentialManager = CredentialManager.create(context)
+        credentialManager.clearCredentialState(
+            ClearCredentialStateRequest()
+        )
+        dataStore.saveData(User())
+    } catch (e: ClearCredentialException) {
+        Log.e("SIGN-IN", "Error: ${e.errorMessage}")
+    }
+}
+
 
 @Composable
 fun PriorityBadge(priority: Priority) {
