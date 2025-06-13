@@ -56,10 +56,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.pasya0118.miniproject.R
 import com.pasya0118.miniproject.model.Category
 import com.pasya0118.miniproject.model.Priority
 import com.pasya0118.miniproject.model.Task
+import com.pasya0118.miniproject.navigation.Screen
 import com.pasya0118.miniproject.util.SettingsDataStore
 import com.pasya0118.miniproject.viewmodel.TaskViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -147,6 +149,7 @@ fun GridTaskItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskListScreen(
+    navController: NavController,
     viewModel: TaskViewModel,
     onAddTask: () -> Unit,
     onTaskClick: (Task) -> Unit
@@ -200,6 +203,15 @@ fun TaskListScreen(
                                 if (showList) R.string.grid
                                 else R.string.list
                             ),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    IconButton(onClick = {
+                        navController.navigate(Screen.Trash.route)
+                    }) {
+                        Icon(
+                            painter = painterResource(R.drawable.baseline_delete_24),
+                            contentDescription = stringResource(R.string.trash),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }

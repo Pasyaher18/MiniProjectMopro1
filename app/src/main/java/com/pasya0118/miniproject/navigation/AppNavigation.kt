@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -15,13 +16,18 @@ import com.pasya0118.miniproject.model.Task
 import com.pasya0118.miniproject.screens.AddTaskScreen
 import com.pasya0118.miniproject.screens.TaskDetailScreen
 import com.pasya0118.miniproject.screens.TaskListScreen
+import com.pasya0118.miniproject.screens.TrashScreen
 import com.pasya0118.miniproject.viewmodel.TaskViewModel
 
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    val taskViewModel: TaskViewModel = viewModel()
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val db = com.pasya0118.miniproject.data.AppDatabase.getInstance(context)
+    val factory = com.pasya0118.miniproject.viewmodel.TaskViewModelFactory(db.taskDao())
+    val taskViewModel: TaskViewModel = viewModel(factory = factory)
 
     var selectedTask by remember { mutableStateOf<Task?>(null) }
 
@@ -31,6 +37,7 @@ fun AppNavigation() {
     ) {
         composable(Screen.TaskList.route) {
             TaskListScreen(
+                navController = navController,
                 viewModel = taskViewModel,
                 onAddTask = {
                     selectedTask = null
@@ -75,6 +82,12 @@ fun AppNavigation() {
                 }
             )
         }
+        composable(Screen.Trash.route) {
+            TrashScreen(
+                navController = navController,
+                viewModel = taskViewModel
+            )
+        }
     }
 }
 
@@ -93,4 +106,5 @@ sealed class Screen(val route: String) {
             return "edit_task/$taskId"
         }
     }
+    object Trash : Screen("trash")
 }

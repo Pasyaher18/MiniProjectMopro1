@@ -11,7 +11,8 @@ data class Task(
     val description: String,
     val priority: Priority,
     val category: Category,
-    val isCompleted: Boolean = false
+    val isCompleted: Boolean = false,
+    val isDeleted: Boolean = false
 )
 
 enum class Priority {

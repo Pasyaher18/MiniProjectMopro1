@@ -11,7 +11,7 @@ import com.pasya0118.miniproject.model.Task
 @Dao
 interface TaskDao {
     @Query("SELECT * FROM tasks")
-    fun getAllTasks(): LiveData<Task>
+    suspend fun getAllTasks(): List<Task>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTask(task: Task)
@@ -27,4 +27,14 @@ interface TaskDao {
 
     @Query("SELECT * FROM tasks WHERE id = :id LIMIT 1")
     suspend fun getTaskById(id: String): Task?
+
+    @Query("SELECT * FROM tasks WHERE isDeleted = 0")
+    suspend fun getAllActiveTasks(): List<Task>
+
+    @Query("SELECT * FROM tasks WHERE isDeleted = 1")
+    suspend fun getDeletedTasks(): List<Task>
+
+    @Query("UPDATE tasks SET isDeleted = 1 WHERE id = :taskId")
+    suspend fun softDeleteTask(taskId: String)
+
 }
