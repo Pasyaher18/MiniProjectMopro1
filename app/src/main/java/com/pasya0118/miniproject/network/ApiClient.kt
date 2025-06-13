@@ -8,12 +8,12 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 object ApiClient {
 
     private val moshi = Moshi.Builder()
-        .add(KotlinJsonAdapterFactory()) // ✅ Moshi Kotlin adapter
+        .add(KotlinJsonAdapterFactory())
         .build()
 
     private val retrofit = Retrofit.Builder()
-        .baseUrl("https://yourapi.com/api/") // 🔁 Ganti ini dengan URL aslimu
-        .addConverterFactory(MoshiConverterFactory.create(moshi)) // ✅ Moshi converter
+        .baseUrl("https://yourapi.com/api/")
+        .addConverterFactory(MoshiConverterFactory.create(moshi))
         .build()
 
     val taskApiService: TaskApiService = retrofit.create(TaskApiService::class.java)

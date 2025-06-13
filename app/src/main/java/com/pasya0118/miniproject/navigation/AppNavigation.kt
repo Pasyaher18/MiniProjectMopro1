@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -16,6 +17,8 @@ import com.pasya0118.miniproject.screens.AddTaskScreen
 import com.pasya0118.miniproject.screens.TaskDetailScreen
 import com.pasya0118.miniproject.screens.TaskListScreen
 import com.pasya0118.miniproject.screens.TrashScreen
+import com.pasya0118.miniproject.util.NoInternetScreen
+import com.pasya0118.miniproject.util.isConnectedToInternet
 import com.pasya0118.miniproject.viewmodel.TaskViewModel
 
 
@@ -90,6 +93,22 @@ fun AppNavigation() {
         }
     }
 }
+
+@RequiresApi(Build.VERSION_CODES.N)
+@Composable
+fun AppEntryScreen() {
+    val context = LocalContext.current
+    var isConnected by remember { mutableStateOf(isConnectedToInternet(context)) }
+
+    if (!isConnected) {
+        NoInternetScreen(onRetry = {
+            isConnected = isConnectedToInternet(context)
+        })
+    } else {
+        AppNavigation()
+    }
+}
+
 
 sealed class Screen(val route: String) {
     object TaskList : Screen("task_list")

@@ -2,6 +2,7 @@ package com.pasya0118.miniproject.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import okio.Path
 import java.util.UUID
 
 @Entity(tableName = "tasks")
@@ -12,7 +13,8 @@ data class Task(
     val priority: Priority,
     val category: Category,
     val isCompleted: Boolean = false,
-    val isDeleted: Boolean = false
+    val isDeleted: Boolean = false,
+
 )
 
 enum class Priority {

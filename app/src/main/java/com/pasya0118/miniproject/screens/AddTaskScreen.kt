@@ -1,5 +1,9 @@
 package com.pasya0118.miniproject.screens
 
+import android.graphics.Bitmap
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -44,6 +48,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.pasya0118.miniproject.R
@@ -65,7 +70,8 @@ fun AddTaskScreen(
     var selectedPriority by rememberSaveable { mutableStateOf(task?.priority ?: Priority.MEDIUM) }
     var selectedCategory by rememberSaveable { mutableStateOf(task?.category ?: Category.PERSONAL) }
 
-
+    // State for capturing the image
+    var bitmap: Bitmap? by remember { mutableStateOf(null) }
     var isImportantTask by rememberSaveable { mutableStateOf(task?.priority == Priority.HIGH) }
     var isTaskNameError by remember { mutableStateOf(false) }
 
@@ -77,23 +83,14 @@ fun AddTaskScreen(
     val errorEmptyTaskMessage = stringResource(id = R.string.error_empty_task)
     val taskAddedMessage = stringResource(id = R.string.task_added)
 
+    // Camera Launcher to open the camera and capture an image
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { result: Bitmap? ->
+        bitmap = result
+    }
+
     Scaffold(
-        snackbarHost = {
-            SnackbarHost(
-                hostState = snackbarHostState,
-                snackbar = { snackbarData ->
-                    Snackbar(
-                        modifier = Modifier.padding(16.dp),
-                        content = {
-                            Text(
-                                text = snackbarData.visuals.message,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                    )
-                }
-            )
-        },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(id = R.string.add_task)) },
@@ -108,6 +105,22 @@ fun AddTaskScreen(
                             contentDescription = stringResource(id = R.string.back)
                         )
                     }
+                }
+            )
+        },
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                snackbar = { snackbarData ->
+                    Snackbar(
+                        modifier = Modifier.padding(16.dp),
+                        content = {
+                            Text(
+                                text = snackbarData.visuals.message,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    )
                 }
             )
         }
@@ -141,6 +154,7 @@ fun AddTaskScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            // Deskripsi Tugas
             OutlinedTextField(
                 value = taskDescription,
                 onValueChange = { taskDescription = it },
@@ -151,6 +165,62 @@ fun AddTaskScreen(
                 maxLines = 5
             )
 
+            // Kategori Dropdown Menu
+            ExposedDropdownMenuBox(
+                expanded = isCategoryExpanded,
+                onExpandedChange = { isCategoryExpanded = it },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                TextField(
+                    value = when (selectedCategory) {
+                        Category.WORK -> stringResource(id = R.string.category_work)
+                        Category.PERSONAL -> stringResource(id = R.string.category_personal)
+                        Category.SHOPPING -> stringResource(id = R.string.category_shopping)
+                        Category.OTHER -> stringResource(id = R.string.category_other)
+                    },
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isCategoryExpanded) },
+                    colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                    modifier = Modifier.fillMaxWidth()
+
+                )
+
+                ExposedDropdownMenu(
+                    expanded = isCategoryExpanded,
+                    onDismissRequest = { isCategoryExpanded = false }
+                ) {
+                    Category.entries.forEach { category ->
+                        val categoryText = when (category) {
+                            Category.WORK -> stringResource(id = R.string.category_work)
+                            Category.PERSONAL -> stringResource(id = R.string.category_personal)
+                            Category.SHOPPING -> stringResource(id = R.string.category_shopping)
+                            Category.OTHER -> stringResource(id = R.string.category_other)
+                        }
+
+                        DropdownMenuItem(
+                            text = { Text(text = categoryText) },
+                            onClick = {
+                                selectedCategory = category
+                                isCategoryExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Tombol Ambil Foto
+            Button(
+                onClick = { cameraLauncher.launch(null) },
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+            ) {
+                Text("Ambil Foto")
+            }
+            if (bitmap != null) {
+                Image(bitmap = bitmap!!.asImageBitmap(), contentDescription = "Captured Image")
+            }
+
+            // Task Penting Checkbox
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -162,6 +232,7 @@ fun AddTaskScreen(
                 Text(text = "Task Penting")
             }
 
+            // Prioritas Radio Button
             Text(
                 text = stringResource(id = R.string.priority),
                 style = MaterialTheme.typography.titleMedium,
@@ -203,58 +274,6 @@ fun AddTaskScreen(
                             text = priorityText,
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.padding(start = 8.dp)
-                        )
-                    }
-                }
-            }
-
-            Text(
-                text = stringResource(id = R.string.category),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-            )
-
-            ExposedDropdownMenuBox(
-                expanded = isCategoryExpanded,
-                onExpandedChange = { isCategoryExpanded = it },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                TextField(
-                    value = when (selectedCategory) {
-                        Category.WORK -> stringResource(id = R.string.category_work)
-                        Category.PERSONAL -> stringResource(id = R.string.category_personal)
-                        Category.SHOPPING -> stringResource(id = R.string.category_shopping)
-                        Category.OTHER -> stringResource(id = R.string.category_other)
-                    },
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isCategoryExpanded) },
-                    colors = ExposedDropdownMenuDefaults.textFieldColors(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-
-                )
-
-                ExposedDropdownMenu(
-                    expanded = isCategoryExpanded,
-                    onDismissRequest = { isCategoryExpanded = false }
-                ) {
-                    Category.entries.forEach { category ->
-                        val categoryText = when (category) {
-                            Category.WORK -> stringResource(id = R.string.category_work)
-                            Category.PERSONAL -> stringResource(id = R.string.category_personal)
-                            Category.SHOPPING -> stringResource(id = R.string.category_shopping)
-                            Category.OTHER -> stringResource(id = R.string.category_other)
-                        }
-
-                        DropdownMenuItem(
-                            text = { Text(text = categoryText) },
-                            onClick = {
-                                selectedCategory = category
-                                isCategoryExpanded = false
-                            }
                         )
                     }
                 }

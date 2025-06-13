@@ -1,9 +1,14 @@
 package com.pasya0118.miniproject.screens
 
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
 import android.os.Build
+import android.provider.MediaStore
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -67,6 +72,8 @@ import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.ClearCredentialException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.navigation.NavController
+import com.canhub.cropper.CropImageContract
+import com.canhub.cropper.CropImageView
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
@@ -82,6 +89,7 @@ import com.pasya0118.miniproject.viewmodel.TaskViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.math.log
 
 @Composable
 fun GridTaskItem(
@@ -177,6 +185,11 @@ fun TaskListScreen(
 
 
     var showDialog by remember { mutableStateOf(false) }
+
+    var bitmap: Bitmap? by remember { mutableStateOf(null) }
+    val launcher = rememberLauncherForActivityResult(CropImageContract()) {
+        bitmap = getCroppedImage(context.contentResolver, it)
+    }
     var taskToDelete by remember { mutableStateOf<Task?>(null) }
     val dataStore = SettingsDataStore(LocalContext.current)
     val user by dataStore.userFlow.collectAsState(User())
@@ -520,6 +533,25 @@ private suspend fun signOut(context: Context, dataStore: SettingsDataStore) {
         dataStore.saveData(User())
     } catch (e: ClearCredentialException) {
         Log.e("SIGN-IN", "Error: ${e.errorMessage}")
+    }
+}
+
+private fun getCroppedImage(
+    resolver: ContentResolver,
+    result: CropImageView.CropResult
+): Bitmap? {
+    if (!result.isSuccessful) {
+        Log.e("IMAGE", "Error: ${result.error}")
+        return null
+    }
+
+    val uri = result.uriContent ?: return null
+
+    return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+        MediaStore.Images.Media.getBitmap(resolver, uri)
+    } else {
+        val source = ImageDecoder.createSource(resolver, uri)
+        ImageDecoder.decodeBitmap(source)
     }
 }
 
