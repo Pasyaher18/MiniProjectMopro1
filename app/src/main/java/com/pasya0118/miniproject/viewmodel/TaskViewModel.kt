@@ -74,10 +74,6 @@ class TaskViewModel(private val taskDao: TaskDao) : ViewModel() {
         }
     }
 
-    fun getTaskById(taskId: String): Task? {
-        return _tasks.find { it.id == taskId }
-    }
-
     fun updateTask(updatedTask: Task) {
         viewModelScope.launch {
             taskDao.updateTask(updatedTask)
